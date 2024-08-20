@@ -60,13 +60,6 @@ jobs:
     - name: Verify Android SDK Compatibility
       if: ${{ matrix.release_build }}
       run: ./mvnw -B -q -ff -ntp -DskipTests animal-sniffer:check
-    - name: Deploy snapshot
-      if: ${{ github.event_name != 'pull_request' && matrix.release_build && endsWith(steps.projectVersion.outputs.version, '-SNAPSHOT') }}
-      env:
-        CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
-        CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
-        # MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-      run: ./mvnw -B -q -ff -DskipTests -ntp source:jar deploy
     - name: Generate code coverage
       if: ${{ github.event_name != 'pull_request' && matrix.release_build }}
       run: ./mvnw -B -q -ff -ntp test
@@ -77,22 +70,4 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./target/site/jacoco/jacoco.xml
         flags: unittests
-
-  trigger-dep-builds-v2:
-    name: Trigger downstream builds for v2
-    needs: [build]
-    # Only for pushes to default branch
-    if: ${{ github.event_name == 'push' && github.ref_name == github.event.repository.default_branch }}
-    uses: ./.github/workflows/trigger_dep_builds_v2.yml
-    secrets:
-      token: ${{ secrets.REPO_DISPATCH }}
-
-  trigger-dep-builds-v3:
-    name: Trigger downstream builds for v3
-    needs: [build]
-    # Only for pushes to master (v3) branch
-    if: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
-    uses: ./.github/workflows/trigger_dep_builds_v3.yml
-    secrets:
-      token: ${{ secrets.REPO_DISPATCH }}
       
